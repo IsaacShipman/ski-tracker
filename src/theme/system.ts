@@ -4,46 +4,31 @@ const config = defineConfig({
   theme: {
     tokens: {
       colors: {
-        // Ski-themed brand colors - cool blues and whites representing snow and sky
-        brand: {
-          50: { value: "#e6f4ff" },
-          100: { value: "#cce8ff" },
-          200: { value: "#99d1ff" },
-          300: { value: "#66baff" },
-          400: { value: "#33a3ff" },
-          500: { value: "#0088ff" },
-          600: { value: "#006dcc" },
-          700: { value: "#005299" },
-          800: { value: "#003766" },
-          900: { value: "#001c33" },
-          950: { value: "#000e1a" },
+        // Sky-inspired blues from the weather theme
+        sky: {
+          50: { value: "#F0F7FF" },
+          100: { value: "#E8F3FC" },
+          200: { value: "#D1E7F8" },
+          300: { value: "#A8C9E8" },
+          400: { value: "#7BA7D6" },
+          500: { value: "#5B8EC4" },
+          600: { value: "#4A75A8" },
+          700: { value: "#3A5C86" },
+          800: { value: "#2D4664" },
+          900: { value: "#1E2F42" },
         },
-        // Mountain/Slate colors for UI elements
-        mountain: {
-          50: { value: "#f8f9fa" },
-          100: { value: "#f1f3f5" },
-          200: { value: "#e9ecef" },
-          300: { value: "#dee2e6" },
-          400: { value: "#ced4da" },
-          500: { value: "#adb5bd" },
-          600: { value: "#868e96" },
-          700: { value: "#495057" },
-          800: { value: "#343a40" },
-          900: { value: "#212529" },
-          950: { value: "#16191d" },
-        },
-        // Snow white accent
-        snow: {
-          50: { value: "#ffffff" },
-          100: { value: "#fefefe" },
-          200: { value: "#fcfcfc" },
-          300: { value: "#fafafa" },
-          400: { value: "#f7f7f7" },
-          500: { value: "#f5f5f5" },
-          600: { value: "#e8e8e8" },
-          700: { value: "#d1d1d1" },
-          800: { value: "#bababa" },
-          900: { value: "#a3a3a3" },
+        // Cloud whites for glassmorphic elements
+        cloud: {
+          50: { value: "#FFFFFF" },
+          100: { value: "#F8FBFF" },
+          200: { value: "#F0F6FC" },
+          300: { value: "#E5EFF8" },
+          400: { value: "#D8E8F5" },
+          500: { value: "#C5DCF0" },
+          600: { value: "#B0CFEA" },
+          700: { value: "#98BCE0" },
+          800: { value: "#7FA9D6" },
+          900: { value: "#6696CC" },
         },
         // Warning colors for weather alerts
         alert: {
@@ -60,8 +45,8 @@ const config = defineConfig({
         },
       },
       fonts: {
-        heading: { value: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" },
-        body: { value: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" },
+        heading: { value: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" },
+        body: { value: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" },
       },
       fontSizes: {
         xs: { value: "0.75rem" },
@@ -75,52 +60,43 @@ const config = defineConfig({
         "5xl": { value: "3rem" },
       },
       radii: {
-        sm: { value: "0.25rem" },
-        md: { value: "0.5rem" },
-        lg: { value: "0.75rem" },
-        xl: { value: "1rem" },
+        sm: { value: "0.5rem" },
+        md: { value: "0.75rem" },
+        lg: { value: "1rem" },
+        xl: { value: "1.5rem" },
         "2xl": { value: "1.5rem" },
+      },
+      shadows: {
+        sm: { value: "0 2px 8px rgba(31, 38, 135, 0.1)" },
+        md: { value: "0 4px 16px rgba(31, 38, 135, 0.15)" },
+        lg: { value: "0 8px 32px rgba(31, 38, 135, 0.2)" },
+        xl: { value: "0 12px 48px rgba(31, 38, 135, 0.25)" },
       },
     },
     semanticTokens: {
       colors: {
-        brand: {
-          solid: { value: "{colors.brand.500}" },
-          contrast: { value: "{colors.brand.50}" },
-          fg: { 
-            value: { 
-              _light: "{colors.brand.700}", 
-              _dark: "{colors.brand.300}" 
-            } 
-          },
-          muted: { value: "{colors.brand.100}" },
-          subtle: { value: "{colors.brand.200}" },
-          emphasized: { value: "{colors.brand.600}" },
-          focusRing: { value: "{colors.brand.500}" },
+        sky: {
+          solid: { value: "{colors.sky.500}" },
+          contrast: { value: "{colors.sky.50}" },
+          fg: { value: "{colors.sky.700}" },
+          muted: { value: "{colors.sky.100}" },
+          subtle: { value: "{colors.sky.200}" },
+          emphasized: { value: "{colors.sky.600}" },
+          focusRing: { value: "{colors.sky.400}" },
         },
-        mountain: {
-          solid: { value: "{colors.mountain.600}" },
-          contrast: { value: "{colors.mountain.50}" },
-          fg: { 
-            value: { 
-              _light: "{colors.mountain.800}", 
-              _dark: "{colors.mountain.200}" 
-            } 
-          },
-          muted: { value: "{colors.mountain.100}" },
-          subtle: { value: "{colors.mountain.200}" },
-          emphasized: { value: "{colors.mountain.700}" },
-          focusRing: { value: "{colors.mountain.500}" },
+        cloud: {
+          solid: { value: "{colors.cloud.500}" },
+          contrast: { value: "{colors.cloud.50}" },
+          fg: { value: "{colors.sky.700}" },
+          muted: { value: "{colors.cloud.100}" },
+          subtle: { value: "{colors.cloud.200}" },
+          emphasized: { value: "{colors.cloud.600}" },
+          focusRing: { value: "{colors.cloud.400}" },
         },
         alert: {
           solid: { value: "{colors.alert.500}" },
           contrast: { value: "{colors.alert.50}" },
-          fg: { 
-            value: { 
-              _light: "{colors.alert.800}", 
-              _dark: "{colors.alert.300}" 
-            } 
-          },
+          fg: { value: "{colors.alert.800}" },
           muted: { value: "{colors.alert.100}" },
           subtle: { value: "{colors.alert.200}" },
           emphasized: { value: "{colors.alert.600}" },
@@ -131,8 +107,44 @@ const config = defineConfig({
   },
   globalCss: {
     body: {
-      bg: { _light: "snow.500", _dark: "mountain.950" },
-      color: { _light: "mountain.900", _dark: "snow.100" },
+      bg: "linear-gradient(135deg, #7BA7D6 0%, #A8C9E8 50%, #E8F3FC 100%)",
+      minH: "100vh",
+      color: "sky.700",
+    },
+    // Glassmorphic card styling
+    ".card-glass": {
+      bg: "rgba(255, 255, 255, 0.6)",
+      backdropFilter: "blur(20px)",
+      borderRadius: "24px",
+      border: "1px solid rgba(255, 255, 255, 0.3)",
+      boxShadow: "0 8px 32px rgba(31, 38, 135, 0.15)",
+    },
+    // Button styling
+    ".btn-glass": {
+      bg: "rgba(255, 255, 255, 0.8)",
+      backdropFilter: "blur(10px)",
+      borderRadius: "16px",
+      fontWeight: "500",
+      transition: "all 0.3s ease",
+      _hover: {
+        bg: "rgba(255, 255, 255, 0.95)",
+        transform: "translateY(-2px)",
+        boxShadow: "0 8px 24px rgba(31, 38, 135, 0.2)",
+      },
+    },
+    // Input styling
+    ".input-glass": {
+      bg: "rgba(255, 255, 255, 0.5)",
+      backdropFilter: "blur(10px)",
+      borderRadius: "16px",
+      border: "1px solid rgba(255, 255, 255, 0.3)",
+      _hover: {
+        bg: "rgba(255, 255, 255, 0.6)",
+      },
+      _focus: {
+        bg: "rgba(255, 255, 255, 0.7)",
+        borderColor: "sky.300",
+      },
     },
   },
 })

@@ -2,7 +2,7 @@ import type { WeatherData, SkiConditions } from "@/types/weather"
 
 export const mockWeatherData: WeatherData[] = [
   {
-    date: "Today",
+    date: "Monday",
     temperature: {
       current: 28,
       min: 22,
@@ -29,7 +29,7 @@ export const mockWeatherData: WeatherData[] = [
     cloudCover: 90,
   },
   {
-    date: "Tomorrow",
+    date: "Tuesday",
     temperature: {
       current: 25,
       min: 18,
@@ -56,7 +56,7 @@ export const mockWeatherData: WeatherData[] = [
     cloudCover: 95,
   },
   {
-    date: "Saturday",
+    date: "Wednesday",
     temperature: {
       current: 30,
       min: 24,
@@ -83,7 +83,7 @@ export const mockWeatherData: WeatherData[] = [
     cloudCover: 60,
   },
   {
-    date: "Sunday",
+    date: "Thursday",
     temperature: {
       current: 32,
       min: 28,
@@ -108,6 +108,87 @@ export const mockWeatherData: WeatherData[] = [
     humidity: 65,
     pressure: 1018,
     cloudCover: 10,
+  },
+  {
+    date: "Friday",
+    temperature: {
+      current: 26,
+      min: 20,
+      max: 30,
+      feelsLike: 22,
+    },
+    conditions: {
+      id: 802,
+      main: "Clouds",
+      description: "Scattered clouds",
+      icon: "☁️",
+    },
+    wind: {
+      speed: 10,
+      direction: 250,
+      gust: 15,
+    },
+    snow: {
+      last24h: 0,
+    },
+    visibility: 8,
+    humidity: 75,
+    pressure: 1016,
+    cloudCover: 50,
+  },
+  {
+    date: "Saturday",
+    temperature: {
+      current: 22,
+      min: 16,
+      max: 26,
+      feelsLike: 15,
+    },
+    conditions: {
+      id: 600,
+      main: "Snow",
+      description: "Heavy snow",
+      icon: "❄️",
+    },
+    wind: {
+      speed: 18,
+      direction: 290,
+      gust: 25,
+    },
+    snow: {
+      last24h: 12,
+    },
+    visibility: 2,
+    humidity: 92,
+    pressure: 1008,
+    cloudCover: 100,
+  },
+  {
+    date: "Sunday",
+    temperature: {
+      current: 20,
+      min: 14,
+      max: 24,
+      feelsLike: 12,
+    },
+    conditions: {
+      id: 601,
+      main: "Snow",
+      description: "Light snow",
+      icon: "🌨️",
+    },
+    wind: {
+      speed: 14,
+      direction: 275,
+      gust: 20,
+    },
+    snow: {
+      last24h: 6,
+    },
+    visibility: 4,
+    humidity: 88,
+    pressure: 1010,
+    cloudCover: 85,
   },
 ]
 
