@@ -1,26 +1,19 @@
-import { Box, Heading, SimpleGrid, Text, VStack, Button } from "@chakra-ui/react"
-import { mockWeatherData } from "@/utils/mockWeatherData"
+import { Box, Heading, SimpleGrid, Text, VStack } from "@chakra-ui/react"
 import { WeatherSidebar } from "./components/weather/WeatherSidebar"
 import { WeatherTimeline } from "./components/weather/weatherTimeline" 
 import { GlassCard } from "./components/ui/GlassCard"
-import { useState, useMemo } from "react"
-import type { WeatherData } from "@/types/weather"
+import Snowfall from "./components/ui/Snowfall"
+import { useEffect, useMemo, useState } from "react"
 import { CircularProgressbar, buildStyles } from 'react-circular-progressbar'
 import 'react-circular-progressbar/dist/styles.css'
-import sunnyBackground from '/blue-sky.jpeg'
-import cloudyBackground from '/angry-cloud.jpg'
+import type { WeatherData } from "@/types/weather"
+import { useWeatherForecast } from "@/hooks/useWeatherForecast"
+import { getWeatherCondition } from "@/utils/weatherCodeMapper"
+import MountainWebcams from "@/components/webcams/MountainWebcams"
+import { MOUNTAIN_LABELS } from "@/utils/webcams"
+import type { MountainKey } from "@/utils/webcams"
+import { getMountainCoords } from "@/utils/mountains"
 
-const getBackgroundImage = (weather: WeatherData) => {
-  const { conditions, cloudCover } = weather
-  
-  // Clear skies or low cloud cover = sunny background
-  if (conditions.main === 'Clear' || cloudCover < 40) {
-    return sunnyBackground
-  }
-  
-  // Otherwise cloudy background
-  return cloudyBackground
-}
 
 const getScoreColor = (score: number) => {
   if (score >= 80) return 'rgba(34, 197, 94, 0.9)' // Green
@@ -43,48 +36,193 @@ const getSubLabel = (score: number) => {
   return 'Not recommended for skiing'
 }
 function App() {
-  const [weatherIndex, setWeatherIndex] = useState(2)
-  const currentWeather = mockWeatherData[weatherIndex]
-  const backgroundImage = useMemo(() => getBackgroundImage(currentWeather), [currentWeather])
+  // Selected mountain for webcams and context
+  const [selectedMountain, setSelectedMountain] = useState<MountainKey>("big-white")
+  // Background picked via gradient; image helper kept for future use
+  const coords = useMemo(() => getMountainCoords(selectedMountain), [selectedMountain])
+  const { data: forecast } = useWeatherForecast(coords.latitude, coords.longitude)
   
-  const skiScore = 20 // You can calculate this dynamically based on weather conditions
+  const todayIso = useMemo(() => new Date().toISOString().slice(0,10), [])
+  const cmToIn = (cm: number) => cm / 2.54
+  const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v))
+  const scaleScore = (value: number, maxValue: number) => clamp((value / maxValue) * 100, 0, 100)
+  
+  const derived = useMemo(() => {
+    const daily = forecast?.daily_data ?? []
+    const parsed = daily.map(d => ({
+      ...d,
+      _date: d.date,
+    }))
+    const todayEntry = parsed.find(d => d._date === todayIso) ?? parsed[0]
+    const pastDays = parsed.filter(d => d._date < todayIso).sort((a,b) => (a._date < b._date ? 1 : -1))
+    const futureDays = parsed.filter(d => d._date > todayIso).sort((a,b) => (a._date < b._date ? -1 : 1))
 
-  const toggleWeather = () => {
-    setWeatherIndex((prev) => (prev + 1) % mockWeatherData.length)
-  }
+    const fresh24Cm = todayEntry?.snowfall_sum ?? 0
+    const past72Cm = pastDays.slice(0, 3).reduce((s,d) => s + (d.snowfall_sum ?? 0), 0)
+    const next72Cm = futureDays.slice(0, 3).reduce((s,d) => s + (d.snowfall_sum ?? 0), 0)
+    const total7dCm = parsed.reduce((s,d) => s + (d.snowfall_sum ?? 0), 0)
+
+    const tempAvg = todayEntry ? (todayEntry.temperature_2m_max + todayEntry.temperature_2m_min) / 2 : 0
+    const windMax = todayEntry?.wind_speed_10m_max ?? 0
+    const precipProb = todayEntry?.precipitation_probability_max ?? 0
+
+    const freshScore = scaleScore(fresh24Cm, 30)
+    const futureScore = scaleScore(next72Cm, 45)
+    const tempScore = (() => {
+      const ideal = -6
+      const spanLow = -20
+      const spanHigh = 2
+      if (tempAvg <= spanLow || tempAvg >= 8) return 10
+      const dist = Math.abs(tempAvg - ideal)
+      const worst = Math.max(ideal - spanLow, spanHigh - ideal)
+      return clamp(100 - (dist / worst) * 100, 0, 100)
+    })()
+    const windScore = clamp(100 - (windMax / 60) * 100, 0, 100)
+    const precipScore = tempAvg <= 0 ? precipProb : (100 - precipProb)
+
+    const skiScore = Math.round(
+      0.4 * freshScore +
+      0.4 * futureScore +
+      0.4 * tempScore +
+      0.4 * windScore +
+      0.4 * precipScore
+    )
+
+    const fresh24In = cmToIn(fresh24Cm)
+    const past72In = cmToIn(past72Cm)
+    const next72In = cmToIn(next72Cm)
+    const total7dIn = cmToIn(total7dCm)
+
+    const conditionLabel = (() => {
+      if (fresh24In >= 8) return 'Powder'
+      if (fresh24In >= 4) return 'Packed Powder'
+      if (fresh24In >= 1) return 'Fresh on Groomers'
+      if (tempAvg > 2) return 'Spring / Slushy'
+      return 'Groomers'
+    })()
+    const conditionEmoji = (() => {
+      if (conditionLabel === 'Powder') return '❄️'
+      if (conditionLabel === 'Packed Powder') return '🌨️'
+      if (conditionLabel === 'Fresh on Groomers') return '🌬️'
+      if (conditionLabel === 'Spring / Slushy') return '🌤️'
+      return '⛷️'
+    })()
+
+    const hasPastData = pastDays.length > 0
+
+    return {
+      skiScore: clamp(skiScore, 0, 100),
+      fresh24In,
+      past72In,
+      next72In,
+      total7dIn,
+      tempAvg,
+      windMax,
+      precipProb,
+      conditionLabel,
+      conditionEmoji,
+      hasPastData,
+    }
+  }, [forecast, todayIso])
+
+  // Decide default theme from today's condition
+  const defaultIsBlue = useMemo(() => {
+    const code = forecast?.daily_data?.[0]?.weather_code
+    if (typeof code !== 'number') return true
+    const cond = getWeatherCondition(code)
+    const main = cond.main.toLowerCase()
+    // Treat clear as blue sky; otherwise cloudy theme
+    return main === 'clear'
+  }, [forecast])
+
+  useEffect(() => {
+    // keep for potential future theme logic; no-op for now
+  }, [defaultIsBlue])
+  
+  // Map backend daily forecast for "today" to WeatherData for the sidebar
+  const sidebarWeather: WeatherData | null = (() => {
+    if (!forecast || !forecast.daily_data?.length) return null
+    const today = forecast.daily_data[0]
+    const avgTemp = (today.temperature_2m_max + today.temperature_2m_min) / 2
+    const cond = getWeatherCondition(today.weather_code)
+    return {
+      date: today.date,
+      temperature: {
+        current: Math.round(avgTemp),
+        min: Math.round(today.temperature_2m_min),
+        max: Math.round(today.temperature_2m_max),
+        feelsLike: Math.round(avgTemp),
+      },
+      conditions: {
+        id: today.weather_code,
+        main: cond.main,
+        description: cond.description,
+        icon: "",
+      },
+      wind: {
+        speed: today.wind_speed_10m_max,
+        direction: 0,
+        gust: undefined,
+      },
+      snow: {
+        last24h: today.snowfall_sum,
+      },
+      visibility: 0,
+      humidity: 0,
+      pressure: 0,
+      cloudCover: 0,
+    }
+  })()
+  
+  const skiScore = derived.skiScore
 
   return (
     <Box position="relative" minHeight="100vh">
-      {/* Full-screen background image */}
+      {/* Full-screen background gradient */}
       <Box
         position="fixed"
         top={0}
         left={0}
         right={0}
         bottom={0}
-        backgroundImage={`url(${backgroundImage})`}
-        backgroundSize="cover"
-        backgroundPosition="center"
+        background={
+          "linear-gradient(135deg, #0f172a 0%, #1f2937 45%, #334155 100%)"
+
+        }
         zIndex={0}
-        transition="background-image 0.8s ease-in-out"
-        filter="blur(5px) brightness(0.7)"
       />
 
-      {/* Weather Toggle */}
-      <Button
-        onClick={toggleWeather}
-        position="fixed"
-        top={4}
-        right={4}
-        zIndex={1000}
-        colorScheme="blue"
-        size="sm"
-      >
-        Weather: Day {weatherIndex + 1}
-      </Button>
+      {/* Soft snowfall above gradient, below all content */}
+      <Snowfall density={1} speed={1} wind={0.05} opacity={0.8} />
 
-      {/* Weather Sidebar - Fixed on left */}
-      <WeatherSidebar weather={currentWeather} />
+      {/* Mountain Selector (replaces debug sky toggle) */}
+      <Box position="fixed" top={4} right={9} zIndex={1000}>
+        <select
+          value={selectedMountain}
+          onChange={(e) => setSelectedMountain(e.target.value as MountainKey)}
+          style={{
+            color: 'white',
+            backgroundColor: 'rgba(255,255,255,0.08)',
+            border: '1px solid rgba(255,255,255,0.5)',
+            padding: '6px 10px',
+            borderRadius: 6,
+            WebkitAppearance: 'none' as any,
+            appearance: 'none',
+            backdropFilter: 'blur(8px)',
+            marginTop: 20,
+
+          }}
+        >
+          {Object.entries(MOUNTAIN_LABELS).map(([key, label]) => (
+            <option key={key} value={key} style={{ color: '#111827' }}>
+              {label}
+            </option>
+          ))}
+        </select>
+      </Box>
+
+      {/* Weather Sidebar - Fixed on left (uses live backend data) */}
+      {sidebarWeather && <WeatherSidebar weather={sidebarWeather} />}
 
       {/* Main Content Area - Offset by sidebar width */}
       <Box
@@ -95,12 +233,12 @@ function App() {
         >
         {/* Title */}
         <Heading
-          size="3xl"
+          size="4xl"
           mb={8}
           color="white"
           textTransform="uppercase"
           letterSpacing="wider"
-          fontWeight="300"
+          fontWeight="600"
           marginLeft={{ md: "340px" }}
           textShadow="0 4px 20px rgba(0, 0, 0, 0.5), 0 0 40px rgba(255, 255, 255, 0.1)"
           fontFamily="system-ui, -apple-system, 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif"
@@ -110,7 +248,7 @@ function App() {
 
         {/* Weather Timeline - Main Feature */}
         <Box mb={8} px={0} marginLeft={{ md: "340px" }}>
-          <WeatherTimeline weatherData={mockWeatherData} currentWeather={mockWeatherData[3]} />
+          <WeatherTimeline latitude={coords.latitude} longitude={coords.longitude} />
         </Box>
 
         {/* Main Cards Grid */}
@@ -154,7 +292,7 @@ function App() {
 
           {/* Snow Conditions Card */}
           <GlassCard>
-            <VStack alignItems="flex-start" gap={4} height="100%">
+              <VStack alignItems="center" gap={4} height="100%" justifyContent="center">
               <Text 
                 fontSize="sm" 
                 color="white" 
@@ -163,54 +301,56 @@ function App() {
                 fontWeight="600"
                 letterSpacing="0.1em"
               >
-                Snow Conditions
+                Current Snow Conditions
               </Text>
-              <VStack alignItems="flex-start" gap={3} flex="1" justifyContent="center">
-                <Heading size="4xl" color="white" textShadow="0 2px 12px rgba(0, 0, 0, 0.3)">
-                  ❄️ Powder
-                </Heading>
-                <Text color="white" opacity={0.9} fontSize="lg">
-                  Base depth: 48 inches
+              <VStack alignItems="flex-start" gap={2} flex="1" justifyContent="center" width="100%">
+             
+           
+
+                <SimpleGrid columns={{ base: 2, md: 2 }} gap={3} width="100%" mt={2}>
+                  <Box bg="whiteAlpha.100" borderRadius="md" px={3} py={3} border="1px solid rgba(255,255,255,0.08)">
+                    <Text color="white" fontWeight="700" fontSize="2xl" lineHeight={1.1}>
+                      {derived.fresh24In.toFixed(1)}
+                    </Text>
+                    <Text fontSize="xs" color="white" opacity={0.75} textTransform="uppercase" letterSpacing="0.08em">
+                      Fresh 24h
+                    </Text>
+                  </Box>
+                  <Box bg="whiteAlpha.100" borderRadius="md" px={3} py={3} border="1px solid rgba(255,255,255,0.08)">
+                    <Text color="white" fontWeight="700" fontSize="2xl" lineHeight={1.1}>
+                      {derived.hasPastData ? `${derived.past72In.toFixed(1)}` : 'N/A'}
+                    </Text>
+                    <Text fontSize="xs" color="white" opacity={0.75} textTransform="uppercase" letterSpacing="0.08em">
+                      Past 72h
+                    </Text>
+                  </Box>
+                  <Box bg="whiteAlpha.100" borderRadius="md" px={3} py={3} border="1px solid rgba(255,255,255,0.08)">
+                    <Text color="white" fontWeight="700" fontSize="2xl" lineHeight={1.1}>
+                      {derived.next72In.toFixed(1)}
+                    </Text>
+                    <Text fontSize="xs" color="white" opacity={0.75} textTransform="uppercase" letterSpacing="0.08em">
+                      Next 72h (fcst)
+                    </Text>
+                  </Box>
+                  <Box bg="whiteAlpha.100" borderRadius="md" px={3} py={3} border="1px solid rgba(255,255,255,0.08)">
+                    <Text color="white" fontWeight="700" fontSize="2xl" lineHeight={1.1}>
+                      {derived.total7dIn.toFixed(1)}
+                    </Text>
+                    <Text fontSize="xs" color="white" opacity={0.75} textTransform="uppercase" letterSpacing="0.08em">
+                      7‑day total
+                    </Text>
+                  </Box>
+                </SimpleGrid>
+
+                <Text fontSize="sm" color="white" opacity={0.7} mt={2}>
+                  Avg {Math.round(derived.tempAvg)}°C • Wind {Math.round(derived.windMax)} km/h • Precip {Math.round(derived.precipProb)}%
                 </Text>
               </VStack>
-              <Text fontSize="sm" color="white" opacity={0.6}>
-                Fresh: 4" in last 24h
-              </Text>
             </VStack>
           </GlassCard>
 
-          {/* Notifications Card */}
-          <GlassCard>
-            <VStack alignItems="flex-start" gap={4} height="100%">
-              <Text 
-                fontSize="sm" 
-                color="white" 
-                opacity={0.7}
-                textTransform="uppercase" 
-                fontWeight="600"
-                letterSpacing="0.1em"
-              >
-                Daily Notifications
-              </Text>
-              <VStack alignItems="flex-start" gap={3} flex="1" justifyContent="center" width="100%">
-               
-                <VStack alignItems="flex-start" gap={2} width="100%">
-                  <Text color="white" opacity={0.9} fontSize="md">
-                    • Isaac Shipman
-                  </Text>
-                  <Text color="white" opacity={0.9} fontSize="md">
-                    • John Doe
-                  </Text>
-                  <Text color="white" opacity={0.9} fontSize="md">
-                    • Jane Smith
-                  </Text>
-                </VStack>
-              </VStack>
-              <Text fontSize="sm" color="white" opacity={0.6}>
-                3 active subscribers • Morning updates at 7am
-              </Text>
-            </VStack>
-          </GlassCard>
+          {/* Webcams Card */}
+          <MountainWebcams mountain={selectedMountain} />
         </SimpleGrid>
 
            </Box>

@@ -25,6 +25,12 @@ const getWeatherIcon = (conditions: WeatherData['conditions']) => {
 }
 
 export function WeatherSidebar({ weather }: WeatherSidebarProps) {
+  const snowfallInches = (weather.snow?.last24h ?? weather.snow?.last3h ?? weather.snow?.last1h ?? 0)
+  const showSnowfallCard = (
+    typeof weather.snow?.last24h !== 'undefined' ||
+    typeof weather.snow?.last3h !== 'undefined' ||
+    typeof weather.snow?.last1h !== 'undefined'
+  )
 
   return (
     <Box
@@ -44,16 +50,15 @@ export function WeatherSidebar({ weather }: WeatherSidebarProps) {
         left={0}
         right={0}
         bottom={0}
-        background="rgba(255, 255, 255, 0.1)"
-        backdropFilter="blur(20px) saturate(180%)"
+        background="whiteAlpha.100"
+        backdropFilter="blur(18px) saturate(160%)"
         css={{
-          WebkitBackdropFilter: "blur(20px) saturate(180%)",
+          WebkitBackdropFilter: "blur(18px) saturate(160%)",
         }}
         borderTopRightRadius="24px"
         borderBottomRightRadius="24px"
-        border="1px solid rgba(255, 255, 255, 0.3)"
-        borderLeft="none"
-        boxShadow="4px 0 32px 0 rgba(31, 38, 135, 0.2), inset 0 1px 0 0 rgba(255, 255, 255, 0.5)"
+        boxShadow="4px 0 32px 0 rgba(13, 16, 35, 0.35)"
+        borderRight="1px solid rgba(255, 255, 255, 0.14)"
         zIndex={1}
         _before={{
           content: '""',
@@ -62,7 +67,7 @@ export function WeatherSidebar({ weather }: WeatherSidebarProps) {
           left: 0,
           right: 0,
           bottom: 0,
-          bg: "linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 50%, transparent 100%)",
+          bg: "linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.04) 50%, transparent 70%)",
           borderTopRightRadius: "24px",
           borderBottomRightRadius: "24px",
           pointerEvents: "none",
@@ -74,7 +79,7 @@ export function WeatherSidebar({ weather }: WeatherSidebarProps) {
           left: "-50%",
           right: "-50%",
           bottom: "-50%",
-          bg: "radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%)",
+          bg: "radial-gradient(circle, rgba(255,255,255,0.08) 0%, transparent 70%)",
           pointerEvents: "none",
           opacity: 0.5,
         }}
@@ -148,7 +153,6 @@ export function WeatherSidebar({ weather }: WeatherSidebarProps) {
             borderRadius="2xl"
             background="rgba(255, 255, 255, 0.06)"
             backdropFilter="blur(20px)"
-            border="1px solid rgba(255, 255, 255, 0.12)"
             transition="all 0.3s ease"
             alignItems="center"
             _hover={{
@@ -171,7 +175,6 @@ export function WeatherSidebar({ weather }: WeatherSidebarProps) {
             borderRadius="2xl"
             background="rgba(255, 255, 255, 0.06)"
             backdropFilter="blur(20px)"
-            border="1px solid rgba(255, 255, 255, 0.12)"
             transition="all 0.3s ease"
             alignItems="center"
             _hover={{
@@ -194,7 +197,6 @@ export function WeatherSidebar({ weather }: WeatherSidebarProps) {
             borderRadius="2xl"
             background="rgba(255, 255, 255, 0.06)"
             backdropFilter="blur(20px)"
-            border="1px solid rgba(255, 255, 255, 0.12)"
             transition="all 0.3s ease"
             alignItems="center"
             _hover={{
@@ -206,7 +208,7 @@ export function WeatherSidebar({ weather }: WeatherSidebarProps) {
               Wind
             </Text>
             <Text fontSize="2xl" fontWeight="400" textShadow="0 1px 8px rgba(0, 0, 0, 0.2)">
-              {weather.wind.speed}
+              {Number(weather.wind.speed).toFixed(0)}
             </Text>
           </VStack>
         </HStack>
@@ -214,16 +216,14 @@ export function WeatherSidebar({ weather }: WeatherSidebarProps) {
         {/* Additional Info Pills */}
       
 
-        {/* Snowfall indicator if applicable */}
-        {weather.snow && (weather.snow.last1h || weather.snow.last3h || weather.snow.last24h) && (
+        {/* Snowfall indicator */}
+        {showSnowfallCard && (
           <Box
             width="100%"
             padding={5}
             borderRadius="2xl"
-            background="rgba(255, 255, 255, 0.1)"
+            background="whiteAlpha.100"
             backdropFilter="blur(30px)"
-            border="1px solid rgba(255, 255, 255, 0.2)"
-            boxShadow="0 4px 24px 0 rgba(0, 0, 0, 0.25)"
             textAlign="center"
             transition="all 0.3s ease"
             _hover={{
@@ -235,7 +235,7 @@ export function WeatherSidebar({ weather }: WeatherSidebarProps) {
             SNOWFALL (24H)
             </Text>
             <Text fontSize="3xl" fontWeight="300" textShadow="0 2px 15px rgba(0, 0, 0, 0.3)">
-              {weather.snow.last24h || weather.snow.last3h || weather.snow.last1h}"
+              {Number(snowfallInches).toFixed(1)}"
             </Text>
           </Box>
         )}

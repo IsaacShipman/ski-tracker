@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@chakra-ui/react": "^3.29.0",
+    "@chakra-ui/select": "^2.1.2",
     "@emotion/react": "^11.14.0",
     "liquid-glass-react": "^1.1.1",
     "lucide-react": "^0.553.0",
