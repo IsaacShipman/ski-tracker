@@ -1,4 +1,5 @@
 import { Box, Heading, SimpleGrid, Text, VStack } from "@chakra-ui/react"
+import { Global } from "@emotion/react"
 import { WeatherSidebar } from "./components/weather/WeatherSidebar"
 import { WeatherTimeline } from "./components/weather/weatherTimeline" 
 import { GlassCard } from "./components/ui/GlassCard"
@@ -178,6 +179,15 @@ function App() {
 
   return (
     <Box position="relative" minHeight="100vh">
+      <Global
+        styles={`
+          .modal-open .modal-blur-target {
+            filter: blur(10px) saturate(110%);
+            transition: filter 0.01s ease;
+            will-change: filter;
+          }
+        `}
+      />
       {/* Full-screen background gradient */}
       <Box
         position="fixed"

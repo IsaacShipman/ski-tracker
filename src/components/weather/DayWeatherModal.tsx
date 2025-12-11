@@ -8,6 +8,7 @@ import {
   Spinner,
   IconButton,
 } from "@chakra-ui/react"
+import { useEffect } from "react"
 import {
   Cloud,
   CloudRain,
@@ -137,6 +138,16 @@ export const DayWeatherModal = ({
   weatherData,
   loading,
 }: DayWeatherModalProps) => {
+  // When modal opens, add a class to root to allow globally blurring fixed elements (e.g., sidebar)
+  useEffect(() => {
+    if (!isOpen) return
+    const root = document.documentElement
+    root.classList.add("modal-open")
+    return () => {
+      root.classList.remove("modal-open")
+    }
+  }, [isOpen])
+
   if (!isOpen) return null
   if (!weatherData && !loading) return null
 

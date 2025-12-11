@@ -42,6 +42,7 @@ export function WeatherSidebar({ weather }: WeatherSidebarProps) {
       color="white"
       zIndex={10}
       overflow="hidden"
+      className="modal-blur-target"
     >
       {/* Glassmorphic overlay */}
       <Box
