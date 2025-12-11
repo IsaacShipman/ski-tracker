@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { API_BASE_URL } from '@/config/api'
 
 interface DailyWeatherData {
   date: string
@@ -30,7 +31,7 @@ export const useWeatherForecast = (latitude: number = 49.7236, longitude: number
       try {
         setLoading(true)
         const response = await fetch(
-          `http://localhost:8000/api/ski-tracker/weather/7days?latitude=${latitude}&longitude=${longitude}`
+          `${API_BASE_URL}/api/ski-tracker/weather/7days?latitude=${latitude}&longitude=${longitude}`
         )
         
         if (!response.ok) {

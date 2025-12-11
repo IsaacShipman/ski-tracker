@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react'
+import { API_BASE_URL } from '@/config/api'
 
 export interface DetailedDailyWeatherData {
   date: string
@@ -52,7 +53,7 @@ export const useDayWeather = () => {
       const dateOnly = date.split('T')[0]
       
       const response = await fetch(
-        `http://localhost:8000/api/ski-tracker/weather/day?latitude=${latitude}&longitude=${longitude}&start_date=${dateOnly}&end_date=${dateOnly}`
+        `${API_BASE_URL}/api/ski-tracker/weather/day?latitude=${latitude}&longitude=${longitude}&start_date=${dateOnly}&end_date=${dateOnly}`
       )
       
       if (!response.ok) {
